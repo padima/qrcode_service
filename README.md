@@ -9,7 +9,7 @@ The service is designed for easy integration with web/mobile backends, supports 
 
 - Exposes two HTTP endpoints:
 	- `POST /GetQrCode`
-	- `POST /health`
+	- `GET /health`
 - Accepts input text and output format (`png` or `svg`)
 - Generates QR code image data on demand
 - Returns JSON with:
@@ -151,7 +151,7 @@ cargo run -- --help
 - `POST /GetQrCode`
 	- Content-Type: `application/json`
 	- Purpose: generate QR and return Base64 result
-- `POST /health`
+- `GET /health`
 	- Purpose: health-check for monitoring/load balancers
 	- Response body: `OK`
 
@@ -159,7 +159,7 @@ cargo run -- --help
 
 - If service is started with `--api-key <value>`, requests to `POST /GetQrCode` must include header:
 	- `x-api-key: <value>`
-- `POST /health` does not require API key.
+- `GET /health` does not require API key.
 - If service is started without `--api-key`, authentication is not required for any endpoint.
 
 ### Request Body
@@ -199,7 +199,7 @@ Fields:
 Request:
 
 ```bash
-curl -X POST "http://localhost:5020/health"
+curl -X GET "http://localhost:5020/health"
 ```
 
 Response:
