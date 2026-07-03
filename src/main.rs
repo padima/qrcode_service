@@ -11,6 +11,7 @@ use qrcode::{QrCode, render::svg};
 use serde::{Deserialize, Serialize};
 use std::io::Cursor;
 
+/// Command-line interface definition.
 #[derive(Parser, Debug)]
 #[command(name = "qrcode_service")]
 struct Cli {
@@ -21,17 +22,20 @@ struct Cli {
     api_key: Option<String>,
 }
 
+/// Application state shared across handlers.
 #[derive(Clone)]
 struct AppState {
     api_key: Option<String>,
 }
 
+/// Request structure for the QR code generation endpoint.
 #[derive(Debug, Deserialize)]
 struct QrRequest {
     text: String,
     format: QrFormat,
 }
 
+/// Supported QR code formats.
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "lowercase")]
 enum QrFormat {
@@ -39,12 +43,14 @@ enum QrFormat {
     Svg,
 }
 
+/// Response structure for the QR code generation endpoint.
 #[derive(Debug, Serialize)]
 struct QrResponse {
     format: &'static str,
     file_base64: String,
 }
 
+/// Main entry point of the application.
 #[tokio::main]
 async fn main() {
     let cli = Cli::parse();
@@ -74,6 +80,7 @@ async fn main() {
     axum::serve(listener, app).await.expect("server failed");
 }
 
+/// Handler for generating QR codes.
 async fn get_qr_code(
     State(state): State<AppState>,
     headers: HeaderMap,
