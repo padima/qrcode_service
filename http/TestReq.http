@@ -15,3 +15,7 @@ Content-Type: application/json
   "text": "Hello, World!",
   "format": "svg"
 }
+
+###
+GET http://localhost:5020/health
+Content-Type: application/json
