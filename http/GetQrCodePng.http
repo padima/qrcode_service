@@ -1,0 +1,17 @@
+POST http://localhost:5020/GetQrCode
+Content-Type: application/json
+x-api-key:secret123
+
+{
+  "text": "Barcoders",
+  "format": "png"
+}
+
+###
+POST http://localhost:5020/GetQrCode
+Content-Type: application/json
+
+{
+  "text": "Hello, World!",
+  "format": "svg"
+}
