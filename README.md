@@ -1,17 +1,23 @@
 # QR Code Service
 
-QR Code Service is a microservice built with Rust and Axum.
-It accepts text, generates a QR code in PNG or SVG format, and returns the generated file as a Base64-encoded string.
+QR Code Service is a lightweight HTTP microservice built with Rust and Axum.
+It converts input text into a QR code (`png` or `svg`) and returns the generated file as a Base64 string in JSON.
+
+The service is designed for easy integration with web/mobile backends, supports optional API key protection, and can run both as a regular process and as a Windows service.
 
 ## What This Service Does
 
-- Exposes one HTTP endpoint: `POST /GetQrCode`
+- Exposes two HTTP endpoints:
+	- `POST /GetQrCode`
+	- `POST /health`
 - Accepts input text and output format (`png` or `svg`)
+- Generates QR code image data on demand
 - Returns JSON with:
 	- selected format
 	- generated file encoded as Base64
 - Supports optional API key authentication via header `x-api-key`
 - Allows runtime configuration through CLI arguments
+- Supports deployment as a Windows service (NSSM or native service manager)
 
 ## Tech Stack
 
@@ -140,17 +146,21 @@ cargo run -- --help
 
 ## API
 
-### Endpoint
+### Endpoints
 
-- Method: `POST`
-- Path: `/GetQrCode`
-- Content-Type: `application/json`
+- `POST /GetQrCode`
+	- Content-Type: `application/json`
+	- Purpose: generate QR and return Base64 result
+- `POST /health`
+	- Purpose: health-check for monitoring/load balancers
+	- Response body: `OK`
 
 ### Authentication
 
-- If service is started with `--api-key <value>`, each request must include header:
+- If service is started with `--api-key <value>`, requests to `POST /GetQrCode` must include header:
 	- `x-api-key: <value>`
-- If service is started without `--api-key`, authentication is not required.
+- `POST /health` does not require API key.
+- If service is started without `--api-key`, authentication is not required for any endpoint.
 
 ### Request Body
 
@@ -183,6 +193,20 @@ Fields:
 
 - `format`: resulting file format (`png` or `svg`)
 - `file_base64`: generated file encoded as Base64
+
+### Health-check Response
+
+Request:
+
+```bash
+curl -X POST "http://localhost:5020/health"
+```
+
+Response:
+
+```text
+OK
+```
 
 ## Error Responses
 

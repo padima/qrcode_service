@@ -62,6 +62,7 @@ async fn main() {
 
     let app = Router::new()
         .route("/GetQrCode", post(get_qr_code))
+        .route("/health", post(|| async { "OK" }))
         .with_state(state);
 
     let listener = tokio::net::TcpListener::bind(&cli.bind_addr)
