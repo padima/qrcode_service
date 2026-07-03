@@ -65,6 +65,66 @@ If `--api-key` is not provided (or empty), authentication is disabled.
 cargo run -- --bind-addr 0.0.0.0:5020
 ```
 
+## Run as Windows Service
+
+Use a release build before creating a service:
+
+```powershell
+cargo build --release
+```
+
+Executable path:
+
+```text
+target\release\qrcode_service.exe
+```
+
+### Option A (recommended): NSSM
+
+Install NSSM, then run PowerShell as Administrator:
+
+```powershell
+nssm install QrCodeService "D:\Projekt\Rust\QrcodeService\qrcode_service\target\release\qrcode_service.exe" --bind-addr 0.0.0.0:5020 --api-key secret123
+nssm set QrCodeService AppDirectory "D:\Projekt\Rust\QrcodeService\qrcode_service"
+nssm set QrCodeService AppStdout "D:\Projekt\Rust\QrcodeService\qrcode_service\logs\service.out.log"
+nssm set QrCodeService AppStderr "D:\Projekt\Rust\QrcodeService\qrcode_service\logs\service.err.log"
+nssm set QrCodeService Start SERVICE_AUTO_START
+nssm start QrCodeService
+```
+
+### Option B: Native Windows Service (without NSSM)
+
+Run PowerShell as Administrator:
+
+```powershell
+New-Service -Name "QrCodeService" `
+	-BinaryPathName '"D:\Projekt\Rust\QrcodeService\qrcode_service\target\release\qrcode_service.exe" --bind-addr 0.0.0.0:5020 --api-key secret123' `
+	-DisplayName "QR Code Service" `
+	-StartupType Automatic
+
+Start-Service QrCodeService
+```
+
+Set restart-on-failure policy:
+
+```powershell
+sc.exe failure QrCodeService reset= 86400 actions= restart/5000/restart/5000/restart/5000
+```
+
+### Service Management
+
+```powershell
+Get-Service QrCodeService
+Restart-Service QrCodeService
+Stop-Service QrCodeService
+sc.exe delete QrCodeService
+```
+
+Security note:
+
+- API key in service arguments can be visible to system administrators.
+- For higher security, prefer storing secrets in environment variables or an external secret manager.
+
 ## CLI Arguments
 
 | Argument | Required | Default | Description |
