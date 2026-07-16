@@ -46,8 +46,7 @@ enum QrFormat {
 /// Response structure for the QR code generation endpoint.
 #[derive(Debug, Serialize)]
 struct QrResponse {
-    format: &'static str,
-    file_base64: String,
+    data_base64: String,
 }
 
 /// Main entry point of the application.
@@ -108,8 +107,7 @@ async fn get_qr_code(
             let svg_data = code.render::<svg::Color>().min_dimensions(256, 256).build();
 
             Ok(Json(QrResponse {
-                format: "svg",
-                file_base64: STANDARD.encode(svg_data.as_bytes()),
+                data_base64: STANDARD.encode(svg_data.as_bytes()),
             }))
         }
         QrFormat::Png => {
@@ -123,8 +121,7 @@ async fn get_qr_code(
                 .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
             Ok(Json(QrResponse {
-                format: "png",
-                file_base64: STANDARD.encode(buffer.into_inner()),
+                data_base64: STANDARD.encode(buffer.into_inner()),
             }))
         }
     }

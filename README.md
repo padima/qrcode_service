@@ -184,15 +184,14 @@ Status: `200 OK`
 
 ```json
 {
-	"format": "png",
-	"file_base64": "iVBORw0KGgoAAAANSUhEUgAA..."
+	"data_base64": "iVBORw0KGgoAAAANSUhEUgAA..."
 }
 ```
 
 Fields:
 
 - `format`: resulting file format (`png` or `svg`)
-- `file_base64`: generated file encoded as Base64
+- `data_base64`: generated file encoded as Base64
 
 ### Health-check Response
 
