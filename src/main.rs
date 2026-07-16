@@ -30,22 +30,22 @@ struct AppState {
 
 /// Request structure for the QR code generation endpoint.
 #[derive(Debug, Deserialize)]
-struct QrRequest {
+struct QrCodeRequest {
     text: String,
-    format: QrFormat,
+    format: QrCodeFormat,
 }
 
 /// Supported QR code formats.
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "lowercase")]
-enum QrFormat {
+enum QrCodeFormat {
     Png,
     Svg,
 }
 
 /// Response structure for the QR code generation endpoint.
 #[derive(Debug, Serialize)]
-struct QrResponse {
+struct QrCodeResponse {
     data_base64: String,
 }
 
@@ -83,8 +83,8 @@ async fn main() {
 async fn get_qr_code(
     State(state): State<AppState>,
     headers: HeaderMap,
-    Json(payload): Json<QrRequest>,
-) -> Result<Json<QrResponse>, (StatusCode, String)> {
+    Json(payload): Json<QrCodeRequest>,
+) -> Result<Json<QrCodeResponse>, (StatusCode, String)> {
     if let Some(expected_key) = &state.api_key {
         let provided_key = headers
             .get("x-api-key")
@@ -103,14 +103,14 @@ async fn get_qr_code(
         .map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
 
     match payload.format {
-        QrFormat::Svg => {
+        QrCodeFormat::Svg => {
             let svg_data = code.render::<svg::Color>().min_dimensions(256, 256).build();
 
-            Ok(Json(QrResponse {
+            Ok(Json(QrCodeResponse {
                 data_base64: STANDARD.encode(svg_data.as_bytes()),
             }))
         }
-        QrFormat::Png => {
+        QrCodeFormat::Png => {
             let image = code.render::<Luma<u8>>().min_dimensions(256, 256).build();
 
             let dynamic = DynamicImage::ImageLuma8(image);
@@ -120,7 +120,7 @@ async fn get_qr_code(
                 .write_to(&mut buffer, ImageFormat::Png)
                 .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
-            Ok(Json(QrResponse {
+            Ok(Json(QrCodeResponse {
                 data_base64: STANDARD.encode(buffer.into_inner()),
             }))
         }
@@ -137,9 +137,9 @@ mod tests {
         let response = get_qr_code(
             State(state),
             HeaderMap::new(),
-            Json(QrRequest {
+            Json(QrCodeRequest {
                 text: "Hello, world!".to_string(),
-                format: QrFormat::Svg,
+                format: QrCodeFormat::Svg,
             }),
         )
         .await;
@@ -151,9 +151,9 @@ mod tests {
         let response = get_qr_code(
             State(state),
             HeaderMap::new(),
-            Json(QrRequest {
+            Json(QrCodeRequest {
                 text: "Hello, world!".to_string(),
-                format: QrFormat::Png,
+                format: QrCodeFormat::Png,
             }),
         )
         .await;
