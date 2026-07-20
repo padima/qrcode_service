@@ -33,6 +33,8 @@ struct AppState {
 struct QrCodeRequest {
     text: String,
     format: QrCodeFormat,
+    height: Option<u32>,
+    width: Option<u32>,
 }
 
 /// Supported QR code formats.
@@ -83,7 +85,7 @@ async fn main() {
 async fn get_qr_code(
     State(state): State<AppState>,
     headers: HeaderMap,
-    Json(payload): Json<QrCodeRequest>,
+    Json(body): Json<QrCodeRequest>,
 ) -> Result<Json<QrCodeResponse>, (StatusCode, String)> {
     if let Some(expected_key) = &state.api_key {
         let provided_key = headers
@@ -95,23 +97,32 @@ async fn get_qr_code(
         }
     }
 
-    if payload.text.trim().is_empty() {
+    if body.text.trim().is_empty() {
         return Err((StatusCode::BAD_REQUEST, "text is empty".to_string()));
     }
 
-    let code = QrCode::new(payload.text.as_bytes())
-        .map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
+    let height = body.height.unwrap_or(256);
+    let width = body.width.unwrap_or(256);
 
-    match payload.format {
+    let code =
+        QrCode::new(body.text.as_bytes()).map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
+
+    match body.format {
         QrCodeFormat::Svg => {
-            let svg_data = code.render::<svg::Color>().min_dimensions(256, 256).build();
+            let svg_data = code
+                .render::<svg::Color>()
+                .min_dimensions(width, height)
+                .build();
 
             Ok(Json(QrCodeResponse {
                 data_base64: STANDARD.encode(svg_data.as_bytes()),
             }))
         }
         QrCodeFormat::Png => {
-            let image = code.render::<Luma<u8>>().min_dimensions(256, 256).build();
+            let image = code
+                .render::<Luma<u8>>()
+                .min_dimensions(width, height)
+                .build();
 
             let dynamic = DynamicImage::ImageLuma8(image);
             let mut buffer = Cursor::new(Vec::new());
@@ -140,6 +151,8 @@ mod tests {
             Json(QrCodeRequest {
                 text: "Hello, world!".to_string(),
                 format: QrCodeFormat::Svg,
+                height: Some(256),
+                width: Some(256),
             }),
         )
         .await;
@@ -154,6 +167,8 @@ mod tests {
             Json(QrCodeRequest {
                 text: "Hello, world!".to_string(),
                 format: QrCodeFormat::Png,
+                height: Some(256),
+                width: Some(256),
             }),
         )
         .await;
