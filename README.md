@@ -10,10 +10,9 @@ The service is designed for easy integration with web/mobile backends, supports 
 - Exposes two HTTP endpoints:
 	- `POST /GetQrCode`
 	- `GET /health`
-- Accepts input text and output format (`png` or `svg`)
+- Accepts input text, output format (`png` or `svg`), and optional dimensions (`width`, `height`)
 - Generates QR code image data on demand
 - Returns JSON with:
-	- selected format
 	- generated file encoded as Base64
 - Supports optional API key authentication via header `x-api-key`
 - Allows runtime configuration through CLI arguments
@@ -167,7 +166,9 @@ cargo run -- --help
 ```json
 {
 	"text": "https://example.com",
-	"format": "png"
+	"format": "png",
+	"width": 256,
+	"height": 256
 }
 ```
 
@@ -177,6 +178,8 @@ Fields:
 - `format` (string, required): one of:
 	- `png`
 	- `svg`
+- `width` (number, optional): output width in pixels, default `256`
+- `height` (number, optional): output height in pixels, default `256`
 
 ### Success Response
 
@@ -190,7 +193,6 @@ Status: `200 OK`
 
 Fields:
 
-- `format`: resulting file format (`png` or `svg`)
 - `data_base64`: generated file encoded as Base64
 
 ### Health-check Response
@@ -212,6 +214,9 @@ OK
 - `400 Bad Request`
 	- empty `text`
 	- invalid QR input
+- `422 Unprocessable Entity`
+	- malformed JSON body
+	- unsupported `format` value
 - `401 Unauthorized`
 	- missing or invalid `x-api-key` when API key auth is enabled
 - `500 Internal Server Error`
@@ -227,7 +232,7 @@ With API key:
 curl -X POST "http://localhost:5020/GetQrCode" \
 	-H "Content-Type: application/json" \
 	-H "x-api-key: secret123" \
-	-d '{"text":"Hello, world!","format":"svg"}'
+	-d '{"text":"Hello, world!","format":"svg","width":320,"height":320}'
 ```
 
 Without API key:
